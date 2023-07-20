@@ -150,6 +150,5 @@ void speedWheel(Hall* Ahall, Hall* Bhall) {
     Bhall->timeEnd = 0;
     Ahall->timeEnd = 0;
     previousTime = currentTime;
-    ;
   }
 }
