@@ -1,6 +1,27 @@
 /*
-superficial explanation: https://www.instructables.com/DIY-Temperature-Sensor-Using-One-Diode/
-more to know in filter: https://blog.eletrogate.com/filtro-digital-no-arduino/
+  created on 07/2023
+
+  Reads an analog input with internal pullup resistor,
+  convert to temperature according to voltage referential, 
+  smooth with recursive filtering and
+  display in serial monitor and/or a LCD
+
+  Circuit:
+    - Essencial:
+      - Diode 1N4007
+    - Optional:
+      - Display LCD
+      - potentiometer 10k
+
+  Tips:
+    - can use others diodes, like 1n4148 
+    - tweak temperature values with external source
+    - could change recursiveFilter variables, but the actual is ok for the job  
+    - if change voltage_ref (why?), comment "analogReference(INTERNAL);" line
+
+  Links:
+    - superficial explanation: https://www.instructables.com/DIY-Temperature-Sensor-Using-One-Diode/
+    - more to know about filter: https://blog.eletrogate.com/filtro-digital-no-arduino/
 */
 
 #include <LiquidCrystal.h>
