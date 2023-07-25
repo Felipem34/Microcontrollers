@@ -16,7 +16,7 @@ void setup() {
   pinMode(buttonPin, INPUT_PULLUP);
   pinMode(ledPin, OUTPUT);
   digitalWrite(ledPin, ledState);
-  Serial.begin(9600);
+  Serial.begin(115200);
 }
 
 void loop() {
@@ -72,20 +72,20 @@ void printXSeconds(float message, unsigned long interval) {
   }
 }
 
+// filtering
+int sample_interval = 1;
+int sample_qtd = 100;
 
-/*
-void loop() {
-  contador(cont);
-  Serial.println(cont);
-  delay(1000);
-  cont++;
-  if (cont > 7) {
-    while (cont > 0) {
-      cont--;
-      contador(cont);
-      Serial.println(cont);
-      delay(1000);
-    }
+float recursiveFilter(float voltage_measured) {
+  static float voltage_filtered;
+  static unsigned long timer;
+
+  if (millis() - timer > sample_interval) {
+    voltage_filtered += (float)(voltage_measured - voltage_filtered) / (float)sample_qtd;
+    timer = millis();
+  } else {
+    return ((float)voltage_filtered);
   }
 }
-*/
+
+
