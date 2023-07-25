@@ -3,38 +3,43 @@ superficial explanation: https://www.instructables.com/DIY-Temperature-Sensor-Us
 more to know in filter: https://blog.eletrogate.com/filtro-digital-no-arduino/
 */
 
+#include <LiquidCrystal.h>
+LiquidCrystal lcd(9, 8, 5, 4, 3, 2);  // lcd(RS, enable, D4, D5, D6, D7)
+
 const int sense_pin = A0;
 float voltage_ref = 1.1;
 int resolution = 1024;
 
-// values obteined empirically
-float voltage_temperature_ref = 0.5884;
-float temperature_ref = 20.0;
-float temperature_coeff = -0.0015;  // minus, because it`s a descending linear line
+// values empirically obteined, need to calibrate properly
+float voltage_temperature_ref = 0.5793;
+float temperature_ref = 15.0;
+float temperature_coeff = 0.002;  // typical diode temperature coefficient
 
-
-unsigned long timer;
-int sample_interval = 1;
-int sample_qtd = 100;
 
 void setup() {
   Serial.begin(115200);
+  lcd.begin(16, 2);
   pinMode(sense_pin, INPUT_PULLUP);
-  analogReference(INTERNAL);
-  analogRead(A0);
+  analogReference(INTERNAL);  // for 1.1V regulator, if used a different voltage_ref, comment this line
 }
 
 void loop() {
   float voltage_read = analogRead(sense_pin) * (voltage_ref / resolution);
-  float temperature = temperature_ref + ((voltage_read - voltage_temperature_ref) / temperature_coeff);
+  voltage_read = (int)(voltage_read * 10000 + 0.5) / 10000.0;  // round to 4 decimal places
+  float temperature = temperature_ref - ((voltage_read - voltage_temperature_ref) / temperature_coeff);
 
-  prettyPrint(recursiveFilter(temperature));
-  // Serial.println(recursiveFilter(voltage_read), 6);
+  temperature = recursiveFilter(temperature);
+  prettyPrint(temperature, 1, 500);
+  // Serial.println(voltage_read, 4);  // for calibration
+  // printLCD(temperature);
 }
 
 
 float recursiveFilter(float voltage_measured) {
+  static int sample_interval = 10;  // microseconds
+  static int sample_qtd = 100;
   static float voltage_filtered;
+  static unsigned long timer;
 
   if (millis() - timer > sample_interval) {
     voltage_filtered += (float)(voltage_measured - voltage_filtered) / (float)sample_qtd;
@@ -45,22 +50,32 @@ float recursiveFilter(float voltage_measured) {
 }
 
 
-void prettyPrint(float message) {
+void prettyPrint(float message, int decimal_place, int interval) {
   static unsigned long previousMillis = 0;
+  static float previousMessage;
   unsigned long currentMillis = millis();
 
-
   message = (int)(message * 10 + 0.5) / 10.0;
-  static float previousMessage;
 
-
-  if (currentMillis - previousMillis >= 250) {
+  if (currentMillis - previousMillis >= interval) {
     previousMillis = currentMillis;
     if (message != previousMessage) {
-      Serial.print("Temp = ");
-      Serial.print(message, 1);
+      Serial.print(message, decimal_place);
       Serial.println(" °C");
     }
     previousMessage = message;
   }
+}
+
+
+void printLCD(float message) {
+  lcd.clear();
+  lcd.setCursor(4, 1);
+  lcd.print("TEMP:");
+  lcd.setCursor(10, 1);
+  lcd.print(String(message, 1));
+  lcd.setCursor(14, 1);
+  lcd.print((char)223);  // "°" simbol
+  lcd.setCursor(15, 1);
+  lcd.print("C");
 }
